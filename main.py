@@ -4,7 +4,8 @@ import mel_parser
 
 def main():
     prog = '''
-        //int[] b = new int[4];
+        b = b.lenght;
+        b = b.lenght();
         int[] b = 4;
         int g, g2 = g, g = 90;
 

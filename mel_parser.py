@@ -35,12 +35,13 @@ def _make_parser():
     stmt_list = pp.Forward() #код
 
     call = ident + LPAR + pp.Optional(expr + pp.ZeroOrMore(COMMA + expr)) + RPAR  # вызов фукнции
-    dot = pp.Group(ident + pp.ZeroOrMore(DOT.suppress() + ident)).setName('bin_op')
+    dot = pp.Group(ident + pp.ZeroOrMore(DOT + (call | ident))).setName('bin_op')
 
     group = (
         literal |
-        call |  # обязательно перед ident, т.к. приоритетный выбор (или использовать оператор ^ вместо | )
-        ident | #??????????
+        (dot ^
+        call ^  # обязательно перед ident, т.к. приоритетный выбор (или использовать оператор ^ вместо | )
+        ident) | #??????????
         LPAR + expr + RPAR
     )
 
