@@ -47,6 +47,7 @@ class LiteralNode(ExprNode):
     def __init__(self, literal: str,
                  row: Optional[int] = None, line: Optional[int] = None, **props):
         super().__init__(row=row, line=line, **props)
+        literal = str(literal)
         self.literal = literal
         self.value = eval(literal)
 
@@ -79,6 +80,7 @@ class BinOp(Enum):
     BIT_OR = '|'
     LOGICAL_AND = '&&'
     LOGICAL_OR = '||'
+    DOT = '.'
 
 
 class BinOpNode(ExprNode):
@@ -101,6 +103,36 @@ class StmtNode(ExprNode):
     pass
 
 
+class ArrayNode(StmtNode):
+    def __init__(self, vars_type: StmtNode,
+                 row: Optional[int] = None, line: Optional[int] = None, **props):
+        super().__init__(row=row, line=line, **props)
+        self.vars_type = vars_type
+
+    @property
+    def childs(self) -> Tuple[ExprNode]:
+        # return self.vars_type, (*self.vars_list)
+        return (self.vars_type, )
+
+    def __str__(self) -> str:
+        return '[]'
+
+
+class ArrayNewInitNode():
+    def __init__(self, vars_type: StmtNode, *sizes: Tuple[AstNode, ...],
+                 row: Optional[int] = None, line: Optional[int] = None, **props):
+        super().__init__(row=row, line=line, **props)
+        self.vars_type = vars_type
+        self.sizes = sizes
+
+    @property
+    def childs(self) -> Tuple[ExprNode, BinOpNode]:
+        # return self.vars_type, (*self.vars_list)
+        return (self.vars_type, ) + self.sizes
+
+    def __str__(self) -> str:
+        return 'new'
+
 class VarsDeclNode(StmtNode):
     def __init__(self, vars_type: StmtNode, *vars_list: Tuple[AstNode, ...],
                  row: Optional[int] = None, line: Optional[int] = None, **props):
@@ -116,21 +148,6 @@ class VarsDeclNode(StmtNode):
     def __str__(self) -> str:
         return 'var'
 
-
-class CallNode(StmtNode):
-    def __init__(self, func: IdentNode, *params: Tuple[ExprNode],
-                 row: Optional[int] = None, line: Optional[int] = None, **props):
-        super().__init__(row=row, line=line, **props)
-        self.func = func
-        self.params = params
-
-    @property
-    def childs(self) -> Tuple[IdentNode, ...]:
-        # return self.func, (*self.params)
-        return (self.func, ) + self.params
-
-    def __str__(self) -> str:
-        return 'call'
 
 
 class AssignNode(StmtNode):

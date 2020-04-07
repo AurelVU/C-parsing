@@ -8,7 +8,7 @@ from mel_ast import *
 
 def _make_parser():
     # num = ppc.fnumber.setParseAction(lambda s, loc, tocs: tocs[0])
-    num = pp.Regex('[+-]?\\d+\\.?\\d*([eE][+-]?\\d+)?') # описание числа
+    num = ppc.fnumber # pp.Regex('[+-]?\\d+\\.?\\d*([eE][+-]?\\d+)?') # описание числа
     # c escape-последовательностями как-то неправильно работает
     str_ = pp.QuotedString('"', escChar='\\', unquoteResults=False, convertWhitespaceEscapes=False) #описание строки
     literal = num | str_ #Символ это или число, или буква
@@ -35,6 +35,7 @@ def _make_parser():
     stmt_list = pp.Forward() #код
 
     call = ident + LPAR + pp.Optional(expr + pp.ZeroOrMore(COMMA + expr)) + RPAR  # вызов фукнции
+    dot = pp.Group(ident + pp.ZeroOrMore(DOT.suppress() + ident)).setName('bin_op')
 
     group = (
         literal |
@@ -54,9 +55,12 @@ def _make_parser():
 
     expr << (logical_or)
 
-    simple_assign = (ident + ASSIGN.suppress() + (expr | str_)).setName('assign') #присвоение
+    array = pp.Forward()
+    array_new_init = pp.Keyword("new").suppress() + ident + LBRACK + add + RBRACK
+    array << ident + LBRACK + RBRACK #пока только одномерные массивы. проблемы с рекурсией
+    simple_assign = (ident + ASSIGN.suppress() + (array_new_init | expr | str_)).setName('assign') #присвоение
     var_decl_inner = simple_assign | ident # инициализация и присвоение одного
-    vars_decl = ident + var_decl_inner + pp.ZeroOrMore(COMMA + var_decl_inner) # инициализация и присвоение нескольких
+    vars_decl = (array | ident) + var_decl_inner + pp.ZeroOrMore(COMMA + var_decl_inner) # инициализация и присвоение нескольких
 
     assign = ident + ASSIGN.suppress() + expr #еще раз присвоение?
     simple_stmt = assign | call #бред
@@ -65,6 +69,8 @@ def _make_parser():
     for_stmt_list = vars_decl | for_stmt_list0 # окончательные блоки в for
     for_cond = expr | pp.Group(pp.empty).setName('stmt_list') # условие
     for_body = stmt | pp.Group(SEMI).setName('stmt_list')
+
+
 
     if_ = pp.Keyword("if").suppress() + LPAR + expr + RPAR + stmt + pp.Optional(pp.Keyword("else").suppress() + stmt)
     for_ = pp.Keyword("for").suppress() + LPAR + for_stmt_list + SEMI + for_cond + SEMI + for_stmt_list + RPAR + for_body
@@ -104,7 +110,7 @@ def _make_parser():
                 return node
             parser.setParseAction(bin_op_parse_action)
         else:
-            cls = ''.join(x.capitalize() for x in rule_name.split('_')) + 'Node'
+            cls = ''.join(x.capitalize() for x in rule_name.split('_')) + 'Node' #разбитие названия переменной на куски по _, создание заглавной первой буквы и прибавление Node
             with suppress(NameError):
                 cls = eval(cls)
                 if not inspect.isabstract(cls):
