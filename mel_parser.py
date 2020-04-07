@@ -83,8 +83,9 @@ def _make_parser():
         for_ |
         while_ |
         comp_op |
-        vars_decl + SEMI |
-        simple_stmt + SEMI
+        (dot ^
+        vars_decl + SEMI ^
+        simple_stmt + SEMI)
     )
 
     stmt_list << (pp.ZeroOrMore(stmt + pp.ZeroOrMore(SEMI)))
