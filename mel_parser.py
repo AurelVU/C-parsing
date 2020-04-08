@@ -35,13 +35,12 @@ def _make_parser():
     stmt_list = pp.Forward() #код
 
     call = ident + LPAR + pp.Optional(expr + pp.ZeroOrMore(COMMA + expr)) + RPAR  # вызов фукнции
-    dot = pp.Group(ident + pp.ZeroOrMore(DOT + (call | ident))).setName('bin_op')
+    dot = pp.Group(ident + pp.ZeroOrMore(DOT.suppress() + ident)).setName('bin_op')
 
     group = (
         literal |
-        (dot ^
-        call ^  # обязательно перед ident, т.к. приоритетный выбор (или использовать оператор ^ вместо | )
-        ident) | #??????????
+        call |  # обязательно перед ident, т.к. приоритетный выбор (или использовать оператор ^ вместо | )
+        ident | #??????????
         LPAR + expr + RPAR
     )
 
@@ -57,7 +56,7 @@ def _make_parser():
     expr << (logical_or)
 
     array = pp.Forward()
-    array_new_init = pp.Keyword("new").suppress() + ident + LBRACK + add + RBRACK
+    array_new_init = pp.Keyword("new").suppress() + ident + LBRACK + add + RBRACK + pp.ZeroOrMore(LBRACK + add + RBRACK)
     array << ident + LBRACK + RBRACK #пока только одномерные массивы. проблемы с рекурсией
     simple_assign = (ident + ASSIGN.suppress() + (array_new_init | expr | str_)).setName('assign') #присвоение
     var_decl_inner = simple_assign | ident # инициализация и присвоение одного
@@ -83,9 +82,8 @@ def _make_parser():
         for_ |
         while_ |
         comp_op |
-        (dot ^
-        vars_decl + SEMI ^
-        simple_stmt + SEMI)
+        vars_decl + SEMI |
+        simple_stmt + SEMI
     )
 
     stmt_list << (pp.ZeroOrMore(stmt + pp.ZeroOrMore(SEMI)))

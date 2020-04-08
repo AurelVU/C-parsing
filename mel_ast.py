@@ -118,7 +118,7 @@ class ArrayNode(StmtNode):
         return '[]'
 
 
-class ArrayNewInitNode():
+class ArrayNewInitNode(StmtNode):
     def __init__(self, vars_type: StmtNode, *sizes: Tuple[AstNode, ...],
                  row: Optional[int] = None, line: Optional[int] = None, **props):
         super().__init__(row=row, line=line, **props)
