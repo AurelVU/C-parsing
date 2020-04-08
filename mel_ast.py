@@ -142,12 +142,12 @@ class ValArrNode(StmtNode):
         self.values = values
 
     @property
-    def childs(self) -> Tuple[ExprNode, BinOpNode]:
-        return (self.arr, self.num, ) + self.values
+    def childs(self) -> Tuple[AstNode, AstNode]:
+        return (self.arr, self.num, )
 
 
     def __str__(self) -> str:
-        return '[]'
+        return '[] val'
 
 class ArrayInitedNode(StmtNode):
     def __init__(self, *values: Tuple[AstNode, ...],
@@ -162,6 +162,21 @@ class ArrayInitedNode(StmtNode):
 
     def __str__(self) -> str:
         return '{}'
+
+class ClazzNode(StmtNode):
+    def __init__(self, vars_type: StmtNode, *vars_list: Tuple[AstNode, ...],
+                 row: Optional[int] = None, line: Optional[int] = None, **props):
+        super().__init__(row=row, line=line, **props)
+        self.vars_type = vars_type
+        self.vars_list = vars_list
+
+    @property
+    def childs(self) -> Tuple[ExprNode, ...]:
+        # return self.vars_type, (*self.vars_list)
+        return (self.vars_type, ) + self.vars_list
+
+    def __str__(self) -> str:
+        return 'var'
 
 class VarsDeclNode(StmtNode):
     def __init__(self, vars_type: StmtNode, *vars_list: Tuple[AstNode, ...],

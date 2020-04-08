@@ -38,9 +38,10 @@ def _make_parser():
     call = ident + LPAR + pp.Optional(expr + pp.ZeroOrMore(COMMA + expr)) + RPAR  # вызов фукнции
     dot = pp.Group(ident + pp.ZeroOrMore(DOT + (call | ident))).setName('bin_op')
     val_arr = pp.Forward()
-    val_arr << (ident | val_arr) + LBRACE + add + RBRACE
+    val_arr << pp.Group(ident + LBRACK + add + RBRACK).setName('val_arr')
     group = (
         literal |
+        #val_arr |
         call |  # обязательно перед ident, т.к. приоритетный выбор (или использовать оператор ^ вместо | )
         ident | #??????????
         LPAR + expr + RPAR
@@ -92,8 +93,12 @@ def _make_parser():
     )
 
     stmt_list << (pp.ZeroOrMore(stmt + pp.ZeroOrMore(SEMI)))
+    clazz = pp.Keyword("class").suppress() + ident
 
-    program = stmt_list.ignore(pp.cStyleComment).ignore(pp.dblSlashComment) + pp.StringEnd()
+
+    #program = pp.Optional(pp.ZeroOrMore(clazz)).ignore(pp.cStyleComment).ignore(pp.dblSlashComment) + stmt_list.ignore(pp.cStyleComment).ignore(pp.dblSlashComment) + pp.StringEnd()
+    program = stmt_list.ignore(
+        pp.cStyleComment).ignore(pp.dblSlashComment) + pp.StringEnd()
 
     start = program
 
@@ -114,6 +119,28 @@ def _make_parser():
                     node = BinOpNode(BinOp(tocs[i]), node, secondNode)
                 return node
             parser.setParseAction(bin_op_parse_action)
+        elif rule_name in ('val_arr', ):
+            def bin_op_parse_action(s, loc, tocs):
+                node = tocs[0]
+                if not isinstance(node, AstNode):
+                    node = bin_op_parse_action(s, loc, node)
+                for i in range(1, len(tocs) - 1, 2):
+                    secondNode = tocs[i + 1]
+                    if not isinstance(secondNode, AstNode):
+                        secondNode = bin_op_parse_action(s, loc, secondNode)
+                    node = BinOpNode(BinOp(tocs[i]), node, secondNode)
+                return node
+            def val_arr_parse_action(s, loc, tocs):
+                node = tocs[0]
+                if not isinstance(node, AstNode):
+                    node = val_arr_parse_action(s, loc, node)
+
+                secondNode = tocs[2]
+                if not isinstance(secondNode, AstNode):
+                    secondNode = bin_op_parse_action(s, loc, secondNode)
+                node = ValArrNode(node, secondNode)
+                return node
+            parser.setParseAction(val_arr_parse_action)
         else:
             cls = ''.join(x.capitalize() for x in rule_name.split('_')) + 'Node' #разбитие названия переменной на куски по _, создание заглавной первой буквы и прибавление Node
             with suppress(NameError):
