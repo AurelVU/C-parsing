@@ -33,10 +33,12 @@ def _make_parser():
     expr = pp.Forward() #выражение
     stmt = pp.Forward() #единица кода
     stmt_list = pp.Forward() #код
+    add = pp.Forward()
 
     call = ident + LPAR + pp.Optional(expr + pp.ZeroOrMore(COMMA + expr)) + RPAR  # вызов фукнции
-    dot = pp.Group(ident + pp.ZeroOrMore(DOT.suppress() + ident)).setName('bin_op')
-
+    dot = pp.Group(ident + pp.ZeroOrMore(DOT + (call | ident))).setName('bin_op')
+    val_arr = pp.Forward()
+    val_arr << (ident | val_arr) + LBRACE + add + RBRACE
     group = (
         literal |
         call |  # обязательно перед ident, т.к. приоритетный выбор (или использовать оператор ^ вместо | )
@@ -47,7 +49,7 @@ def _make_parser():
     # обязательно везде pp.Group, иначе приоритет операций не будет работать (см. реализцию set_parse_action_magic);
     # также можно воспользоваться pp.operatorPrecedence (должно быть проще, но не проверял)
     mult = pp.Group(group + pp.ZeroOrMore((MUL | DIV) + group)).setName('bin_op')
-    add = pp.Group(mult + pp.ZeroOrMore((ADD | SUB) + mult)).setName('bin_op')
+    add << pp.Group(mult + pp.ZeroOrMore((ADD | SUB) + mult)).setName('bin_op')
     compare1 = pp.Group(add + pp.Optional((GE | LE | GT | LT) + add)).setName('bin_op')  # GE и LE первыми, т.к. приоритетный выбор
     compare2 = pp.Group(compare1 + pp.Optional((EQUALS | NEQUALS) + compare1)).setName('bin_op')
     logical_and = pp.Group(compare2 + pp.ZeroOrMore(AND + compare2)).setName('bin_op')
@@ -84,8 +86,9 @@ def _make_parser():
         for_ |
         while_ |
         comp_op |
-        vars_decl + SEMI |
-        simple_stmt + SEMI
+        (dot ^
+         vars_decl + SEMI ^
+         simple_stmt + SEMI)
     )
 
     stmt_list << (pp.ZeroOrMore(stmt + pp.ZeroOrMore(SEMI)))

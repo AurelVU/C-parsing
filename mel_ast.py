@@ -133,6 +133,22 @@ class ArrayNewInitNode(StmtNode):
     def __str__(self) -> str:
         return 'new'
 
+class ValArrNode(StmtNode):
+    def __init__(self, arr: AstNode, num: AstNode, *values: Tuple[AstNode, ...],
+                 row: Optional[int] = None, line: Optional[int] = None, **props):
+        super().__init__(row=row, line=line, **props)
+        self.arr = arr
+        self.num = num
+        self.values = values
+
+    @property
+    def childs(self) -> Tuple[ExprNode, BinOpNode]:
+        return (self.arr, self.num, ) + self.values
+
+
+    def __str__(self) -> str:
+        return '[]'
+
 class ArrayInitedNode(StmtNode):
     def __init__(self, *values: Tuple[AstNode, ...],
                  row: Optional[int] = None, line: Optional[int] = None, **props):
