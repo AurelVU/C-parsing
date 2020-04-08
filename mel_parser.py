@@ -58,12 +58,14 @@ def _make_parser():
     array = pp.Forward()
     array_new_init = pp.Keyword("new").suppress() + ident + LBRACK + add + RBRACK + pp.ZeroOrMore(LBRACK + add + RBRACK)
     array << ident + LBRACK + RBRACK #пока только одномерные массивы. проблемы с рекурсией
-    simple_assign = (ident + ASSIGN.suppress() + (array_new_init | expr | str_)).setName('assign') #присвоение
+    array_inited = pp.Forward()
+    array_inited << LBRACE + pp.Optional((add ^ array_inited) + pp.ZeroOrMore(COMMA + (add ^ array_inited))) + RBRACE
+    simple_assign = (ident + ASSIGN.suppress() + (array_inited | array_new_init | expr | str_ )).setName('assign') #присвоение
     var_decl_inner = simple_assign | ident # инициализация и присвоение одного
     vars_decl = (array | ident) + var_decl_inner + pp.ZeroOrMore(COMMA + var_decl_inner) # инициализация и присвоение нескольких
 
-    assign = ident + ASSIGN.suppress() + expr #еще раз присвоение?
-    simple_stmt = assign | call #бред
+    assign = ident + ASSIGN.suppress() + expr
+    simple_stmt = assign | call
 
     for_stmt_list0 = (pp.Optional(simple_stmt + pp.ZeroOrMore(COMMA + simple_stmt))).setName('stmt_list') #блоки в for, заготовка
     for_stmt_list = vars_decl | for_stmt_list0 # окончательные блоки в for
