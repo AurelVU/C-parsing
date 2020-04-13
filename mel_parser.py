@@ -80,12 +80,14 @@ def _make_parser():
     if_ = pp.Keyword("if").suppress() + LPAR + expr + RPAR + stmt + pp.Optional(pp.Keyword("else").suppress() + stmt)
     for_ = pp.Keyword("for").suppress() + LPAR + for_stmt_list + SEMI + for_cond + SEMI + for_stmt_list + RPAR + for_body
     while_ = pp.Keyword("while").suppress() + LPAR + expr + RPAR + stmt
+    return_ = pp.Keyword("return").suppress() + pp.Optional(expr)
     comp_op = LBRACE + stmt_list + RBRACE
 
     stmt << (
         if_ |
         for_ |
         while_ |
+        return_ |
         comp_op |
         (dot ^
          vars_decl + SEMI ^
