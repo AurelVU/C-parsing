@@ -38,11 +38,11 @@ def _make_parser():
     call = ident + LPAR + pp.Optional(expr + pp.ZeroOrMore(COMMA + expr)) + RPAR  # вызов фукнции
     dot = pp.Group(ident + pp.ZeroOrMore(DOT + (call | ident))).setName('bin_op')
     val_arr = pp.Forward() # a[5][b + a]
-    val_arr << pp.Group((val_arr | ident) + LBRACK + expr + RBRACK).setName('val_arr')
+    val_arr << ident + LBRACK + expr + RBRACK
     group = (
         literal |
 
-        #val_arr |
+        val_arr |
         call |  # обязательно перед ident, т.к. приоритетный выбор (или использовать оператор ^ вместо | )
         dot |
         ident | #??????????

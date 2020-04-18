@@ -151,12 +151,11 @@ class ArrayNewInitNode(StmtNode):
         return 'new'
 
 class ValArrNode(StmtNode):
-    def __init__(self, arr: AstNode, num: AstNode, *values: Tuple[AstNode, ...],
+    def __init__(self, arr: AstNode, num: AstNode,
                  row: Optional[int] = None, line: Optional[int] = None, **props):
         super().__init__(row=row, line=line, **props)
         self.arr = arr
         self.num = num
-        self.values = values
 
     @property
     def childs(self) -> Tuple[AstNode, AstNode]:

@@ -11,7 +11,7 @@ def main():
         return ;
         return 2;
         return a+b;
-        
+        a = a[2];
         int[] b = new int[b + c][4];
         int[] b = 4;
         int g, g2 = g, g = 90;
