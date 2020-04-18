@@ -5,8 +5,8 @@ import mel_parser
 def main():
     prog = '''
     
-        //a = a[b + c];
-        a.lenght;
+        elem = a[a+b][2];
+        elem2 = elem + a.lenght;
         int[] b = { a, b , {c, d } };
         int[] b = new int[b + c][4];
         int[] b = 4;

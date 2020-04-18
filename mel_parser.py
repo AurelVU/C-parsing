@@ -13,6 +13,7 @@ def _make_parser():
     str_ = pp.QuotedString('"', escChar='\\', unquoteResults=False, convertWhitespaceEscapes=False) #описание строки
     literal = num | str_ #Символ это или число, или буква
     ident = ppc.identifier.setName('ident') #название функции, объявление непонятное
+    #integer = Word(nums)
 
     LPAR, RPAR = pp.Literal('(').suppress(), pp.Literal(')').suppress()
     LBRACK, RBRACK = pp.Literal("[").suppress(), pp.Literal("]").suppress()
@@ -39,9 +40,12 @@ def _make_parser():
     dot = pp.Group(ident + pp.ZeroOrMore(DOT + (call | ident))).setName('bin_op')
     val_arr = pp.Forward()
     val_arr << pp.Group(ident + LBRACK + add + RBRACK).setName('val_arr')
+    array_index = LBRACK + expr + RBRACK # например [0]
+    array_elem = ident + pp.OneOrMore(array_index) #обращение к элементу массива
+
     group = (
         literal |
-        #val_arr |
+        array_elem |
         call |  # обязательно перед ident, т.к. приоритетный выбор (или использовать оператор ^ вместо | )
         ident | #??????????
         LPAR + expr + RPAR
@@ -59,14 +63,13 @@ def _make_parser():
     expr << (logical_or)
 
     array = pp.Forward()
-    array_new_init = pp.Keyword("new").suppress() + ident + LBRACK + add + RBRACK + pp.ZeroOrMore(LBRACK + add + RBRACK)
+    array_new_init = pp.Keyword("new").suppress() + ident + LBRACK + expr + RBRACK + pp.ZeroOrMore(LBRACK + expr + RBRACK)
     array << ident + LBRACK + RBRACK #пока только одномерные массивы. проблемы с рекурсией
     array_inited = pp.Forward()
-    array_inited << LBRACE + pp.Optional((add ^ array_inited) + pp.ZeroOrMore(COMMA + (add ^ array_inited))) + RBRACE
+    array_inited << LBRACE + pp.Optional((expr ^ array_inited) + pp.ZeroOrMore(COMMA + (expr ^ array_inited))) + RBRACE
     simple_assign = (ident + ASSIGN.suppress() + (array_inited | array_new_init | expr | str_ )).setName('assign') #присвоение
     var_decl_inner = simple_assign | ident # инициализация и присвоение одного
     vars_decl = (array | ident) + var_decl_inner + pp.ZeroOrMore(COMMA + var_decl_inner) # инициализация и присвоение нескольких
-
     assign = ident + ASSIGN.suppress() + expr
     simple_stmt = assign | call
 
