@@ -13,13 +13,19 @@ def main():
             
             int b;
         }
-    
+
+        //elem = a[a+b][2];
+        elem2 = elem + a.length;
+        a = a[b + c];
+        return ;
+
+        int[] b = { a, b , {c, d } };
+
         int a(int a)
         {
             int b = 0;
         }
-    
-        int[] b = { a, b , {c, d } };
+   
         a = a.lenght;
         a.lenght();
         //a = a[b + c];
@@ -27,6 +33,7 @@ def main():
         return 2;
         return a+b;
         a = a[2];
+        
         int[] b = new int[b + c][4];
         int[] b = 4;
         int g, g2 = g, g = 90;
