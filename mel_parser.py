@@ -61,7 +61,7 @@ def _make_parser():
     expr << (logical_or)
 
     array = pp.Forward()
-    array_new_init = pp.Keyword("new").suppress() + ident + LBRACK + expr + RBRACK + pp.ZeroOrMore(LBRACK + add + RBRACK)
+    array_new_init = pp.Keyword("new").suppress() + ident + LBRACK + expr + RBRACK + pp.ZeroOrMore(LBRACK + expr + RBRACK)
     array << ident + LBRACK + RBRACK #пока только одномерные массивы. проблемы с рекурсией
     array_inited = pp.Forward()
     array_inited << LBRACE + pp.Optional((expr ^ array_inited) + pp.ZeroOrMore(COMMA + (expr ^ array_inited))) + RBRACE
