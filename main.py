@@ -4,10 +4,13 @@ import mel_parser
 
 def main():
     prog = '''
-    
+        int[] b = { a, b , {c, d } };
+        a.lenght();
         //a = a[b + c];
         return ;
-        int[] b = { a, b , {c, d } };
+        return 2;
+        return a+b;
+        
         int[] b = new int[b + c][4];
         int[] b = 4;
         int g, g2 = g, g = 90;

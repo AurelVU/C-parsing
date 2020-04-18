@@ -118,6 +118,23 @@ class ArrayNode(StmtNode):
         return '[]'
 
 
+class CallNode(StmtNode):
+    def __init__(self, func_name: StmtNode, *params: Tuple[AstNode, ...],
+                 row: Optional[int] = None, line: Optional[int] = None, **props):
+        super().__init__(row=row, line=line, **props)
+        self.func_name = func_name
+        self.params = params
+
+    @property
+    def childs(self) -> Tuple[ArrayNode, ...]:
+        # return self.vars_type, (*self.vars_list)
+        return (self.func_name,) + self.params
+
+    def __str__(self) -> str:
+        return 'call'
+
+
+
 class ArrayNewInitNode(StmtNode):
     def __init__(self, vars_type: StmtNode, *sizes: Tuple[AstNode, ...],
                  row: Optional[int] = None, line: Optional[int] = None, **props):
@@ -150,14 +167,15 @@ class ValArrNode(StmtNode):
         return '[] val'
 
 class ArrayInitedNode(StmtNode):
-    def __init__(self, *values: Tuple[AstNode, ...],
+    def __init__(self, *values: AstNode,
                  row: Optional[int] = None, line: Optional[int] = None, **props):
         super().__init__(row=row, line=line, **props)
         self.values = values
 
     @property
-    def childs(self) -> Tuple[ExprNode, BinOpNode]:
+    def childs(self) -> Tuple[AstNode]:
         # return self.vars_type, (*self.vars_list)
+        c = (i() for i in self.values)
         return self.values
 
     def __str__(self) -> str:
