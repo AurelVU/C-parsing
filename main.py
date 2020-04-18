@@ -4,10 +4,36 @@ import mel_parser
 
 def main():
     prog = '''
-    
-        elem = a[a+b][2];
-        elem2 = elem + a.lenght;
+        class A
+        {
+            int a(int a)
+            {
+                int b = 0;
+            }
+            
+            int b;
+        }
+
+        //elem = a[a+b][2];
+        elem2 = elem + a.length;
+        a = a[b + c];
+        return ;
+
         int[] b = { a, b , {c, d } };
+
+        int a(int a)
+        {
+            int b = 0;
+        }
+   
+        a = a.lenght;
+        a.lenght();
+        //a = a[b + c];
+        return ;
+        return 2;
+        return a+b;
+        a = a[2];
+        
         int[] b = new int[b + c][4];
         int[] b = 4;
         int g, g2 = g, g = 90;
@@ -29,6 +55,7 @@ def main():
                 else if (f)            
                     output(c + 1, 89.89);
         for(;;);
+        
         while (g2 > g)
             output(g2);
     '''

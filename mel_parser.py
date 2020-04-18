@@ -38,6 +38,7 @@ def _make_parser():
 
     call = ident + LPAR + pp.Optional(expr + pp.ZeroOrMore(COMMA + expr)) + RPAR  # вызов фукнции
     dot = pp.Group(ident + pp.ZeroOrMore(DOT + (call | ident))).setName('bin_op')
+
     val_arr = pp.Forward()
     val_arr << pp.Group(ident + LBRACK + add + RBRACK).setName('val_arr')
     array_index = LBRACK + expr + RBRACK # например [0]
@@ -47,6 +48,7 @@ def _make_parser():
         literal |
         array_elem |
         call |  # обязательно перед ident, т.к. приоритетный выбор (или использовать оператор ^ вместо | )
+        dot |
         ident | #??????????
         LPAR + expr + RPAR
     )
@@ -83,24 +85,32 @@ def _make_parser():
     if_ = pp.Keyword("if").suppress() + LPAR + expr + RPAR + stmt + pp.Optional(pp.Keyword("else").suppress() + stmt)
     for_ = pp.Keyword("for").suppress() + LPAR + for_stmt_list + SEMI + for_cond + SEMI + for_stmt_list + RPAR + for_body
     while_ = pp.Keyword("while").suppress() + LPAR + expr + RPAR + stmt
+    return_ = pp.Keyword("return").suppress() + pp.Optional(expr)
     comp_op = LBRACE + stmt_list + RBRACE
 
     stmt << (
         if_ |
         for_ |
         while_ |
+        return_ |
         comp_op |
         (dot ^
          vars_decl + SEMI ^
          simple_stmt + SEMI)
     )
 
+
     stmt_list << (pp.ZeroOrMore(stmt + pp.ZeroOrMore(SEMI)))
-    clazz = pp.Keyword("class").suppress() + ident
+
+    arg = (array | ident) + ident
+    func_dec = (array | ident) + ident + LPAR + pp.Optional(arg + pp.ZeroOrMore(COMMA.suppress() + arg)) + RPAR + LBRACE + pp.Optional(stmt_list) + RBRACE
+    clazz_dec = pp.Keyword("class").suppress() + ident + LBRACE + pp.ZeroOrMore(func_dec | (var_decl + SEMI)) + RBRACE
+
 
 
     #program = pp.Optional(pp.ZeroOrMore(clazz)).ignore(pp.cStyleComment).ignore(pp.dblSlashComment) + stmt_list.ignore(pp.cStyleComment).ignore(pp.dblSlashComment) + pp.StringEnd()
-    program = stmt_list.ignore(
+    main = pp.ZeroOrMore(clazz_dec | func_dec) + stmt_list
+    program = main.ignore(
         pp.cStyleComment).ignore(pp.dblSlashComment) + pp.StringEnd()
 
     start = program
@@ -122,28 +132,6 @@ def _make_parser():
                     node = BinOpNode(BinOp(tocs[i]), node, secondNode)
                 return node
             parser.setParseAction(bin_op_parse_action)
-        elif rule_name in ('val_arr', ):
-            def bin_op_parse_action(s, loc, tocs):
-                node = tocs[0]
-                if not isinstance(node, AstNode):
-                    node = bin_op_parse_action(s, loc, node)
-                for i in range(1, len(tocs) - 1, 2):
-                    secondNode = tocs[i + 1]
-                    if not isinstance(secondNode, AstNode):
-                        secondNode = bin_op_parse_action(s, loc, secondNode)
-                    node = BinOpNode(BinOp(tocs[i]), node, secondNode)
-                return node
-            def val_arr_parse_action(s, loc, tocs):
-                node = tocs[0]
-                if not isinstance(node, AstNode):
-                    node = val_arr_parse_action(s, loc, node)
-
-                secondNode = tocs[2]
-                if not isinstance(secondNode, AstNode):
-                    secondNode = bin_op_parse_action(s, loc, secondNode)
-                node = ValArrNode(node, secondNode)
-                return node
-            parser.setParseAction(val_arr_parse_action)
         else:
             cls = ''.join(x.capitalize() for x in rule_name.split('_')) + 'Node' #разбитие названия переменной на куски по _, создание заглавной первой буквы и прибавление Node
             with suppress(NameError):

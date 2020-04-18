@@ -118,6 +118,23 @@ class ArrayNode(StmtNode):
         return '[]'
 
 
+class CallNode(StmtNode):
+    def __init__(self, func_name: StmtNode, *params: Tuple[AstNode, ...],
+                 row: Optional[int] = None, line: Optional[int] = None, **props):
+        super().__init__(row=row, line=line, **props)
+        self.func_name = func_name
+        self.params = params
+
+    @property
+    def childs(self) -> Tuple[ArrayNode, ...]:
+        # return self.vars_type, (*self.vars_list)
+        return (self.func_name,) + self.params
+
+    def __str__(self) -> str:
+        return 'call'
+
+
+
 class ArrayNewInitNode(StmtNode):
     def __init__(self, vars_type: StmtNode, *sizes: Tuple[AstNode, ...],
                  row: Optional[int] = None, line: Optional[int] = None, **props):
@@ -134,12 +151,11 @@ class ArrayNewInitNode(StmtNode):
         return 'new'
 
 class ValArrNode(StmtNode):
-    def __init__(self, arr: AstNode, num: AstNode, *values: Tuple[AstNode, ...],
+    def __init__(self, arr: AstNode, num: AstNode,
                  row: Optional[int] = None, line: Optional[int] = None, **props):
         super().__init__(row=row, line=line, **props)
         self.arr = arr
         self.num = num
-        self.values = values
 
     @property
     def childs(self) -> Tuple[AstNode, AstNode]:
@@ -165,34 +181,35 @@ class ArrayElemNode(StmtNode):
 
 
 class ArrayInitedNode(StmtNode):
-    def __init__(self, *values: Tuple[AstNode, ...],
+    def __init__(self, *values: AstNode,
                  row: Optional[int] = None, line: Optional[int] = None, **props):
         super().__init__(row=row, line=line, **props)
         self.values = values
 
     @property
-    def childs(self) -> Tuple[ExprNode, BinOpNode]:
+    def childs(self) -> Tuple[AstNode]:
         # return self.vars_type, (*self.vars_list)
+        c = (i() for i in self.values)
         return self.values
 
     def __str__(self) -> str:
         return '{}'
 
-class ClazzNode(StmtNode):
 
-    def __init__(self, vars_type: StmtNode, *vars_list: Tuple[AstNode, ...],
+class ClazzDecNode(StmtNode):
+    def __init__(self, name: AstNode, *vars_list: Tuple[AstNode, ...],
                  row: Optional[int] = None, line: Optional[int] = None, **props):
         super().__init__(row=row, line=line, **props)
-        self.vars_type = vars_type
+        self.name = name
         self.vars_list = vars_list
 
     @property
     def childs(self) -> Tuple[ExprNode, ...]:
         # return self.vars_type, (*self.vars_list)
-        return (self.vars_type, ) + self.vars_list
+        return (self.name, ) + self.vars_list
 
     def __str__(self) -> str:
-        return 'var'
+        return 'class_decl'
 
 class VarsDeclNode(StmtNode):
     def __init__(self, vars_type: StmtNode, *vars_list: Tuple[AstNode, ...],
@@ -209,6 +226,36 @@ class VarsDeclNode(StmtNode):
     def __str__(self) -> str:
         return 'var'
 
+class VarDeclNode(StmtNode):
+    def __init__(self, vars_type: StmtNode, name: AstNode,
+                 row: Optional[int] = None, line: Optional[int] = None, **props):
+        super().__init__(row=row, line=line, **props)
+        self.vars_type = vars_type
+        self.name = name
+
+    @property
+    def childs(self) -> Tuple[ExprNode, ...]:
+        # return self.vars_type, (*self.vars_list)
+        return (self.vars_type, self.name, )
+
+    def __str__(self) -> str:
+        return 'var'
+
+
+
+class ArgNode(StmtNode):
+    def __init__(self, type: StmtNode, name: StmtNode,
+                 row: Optional[int] = None, line: Optional[int] = None, **props):
+        super().__init__(row=row, line=line, **props)
+        self.type = type
+        self.name = name
+
+    @property
+    def childs(self):
+        return (self.type, self.name,)
+
+    def __str__(self) -> str:
+        return 'arg'
 
 
 class AssignNode(StmtNode):
@@ -256,6 +303,19 @@ class WhileNode(StmtNode):
         return 'while'
 
 
+class ReturnNode(StmtNode):
+    def __init__(self, exp: Optional[ExprNode] = None,
+                 row: Optional[int] = None, line: Optional[int] = None, **props):
+        super().__init__(row=row, line=line, **props)
+        self.exp = exp if exp else _empty
+
+    @property
+    def childs(self) -> Tuple[ExprNode, ...]:
+        return (self.exp, )
+
+    def __str__(self) -> str:
+        return 'return'
+
 class ForNode(StmtNode):
     def __init__(self, init: Union[StmtNode, None], cond: Union[ExprNode, None],
                  step: Union[StmtNode, None], body: Union[StmtNode, None],
@@ -274,6 +334,20 @@ class ForNode(StmtNode):
         return 'for'
 
 
+
+class MainNode(StmtNode):
+    def __init__(self, *exprs: StmtNode,
+                 row: Optional[int] = None, line: Optional[int] = None, **props):
+        super().__init__(row=row, line=line, **props)
+        self.exprs = exprs
+
+    @property
+    def childs(self) -> Tuple[StmtNode, ...]:
+        return self.exprs
+
+    def __str__(self) -> str:
+        return '...'
+
 class StmtListNode(StmtNode):
     def __init__(self, *exprs: StmtNode,
                  row: Optional[int] = None, line: Optional[int] = None, **props):
@@ -286,6 +360,21 @@ class StmtListNode(StmtNode):
 
     def __str__(self) -> str:
         return '...'
+
+class FuncDecNode(StmtNode):
+    def __init__(self, return_type: AstNode, name: AstNode, *args: Tuple[AstNode, ...],
+                 row: Optional[int] = None, line: Optional[int] = None, **props):
+        super().__init__(row=row, line=line, **props)
+        self.return_type = return_type
+        self.name = name
+        self.args = args
+
+    @property
+    def childs(self) -> Tuple[AstNode, ...]:
+        return (self.return_type, self.name, ) + self.args
+
+    def __str__(self) -> str:
+        return 'func_dec'
 
 
 _empty = StmtListNode()
