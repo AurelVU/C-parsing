@@ -41,8 +41,10 @@ def _make_parser():
     val_arr << pp.Group((val_arr | ident) + LBRACK + expr + RBRACK).setName('val_arr')
     group = (
         literal |
+
         #val_arr |
         call |  # обязательно перед ident, т.к. приоритетный выбор (или использовать оператор ^ вместо | )
+        dot |
         ident | #??????????
         LPAR + expr + RPAR
     )
@@ -93,6 +95,7 @@ def _make_parser():
          vars_decl + SEMI ^
          simple_stmt + SEMI)
     )
+
 
     stmt_list << (pp.ZeroOrMore(stmt + pp.ZeroOrMore(SEMI)))
     clazz = pp.Keyword("class").suppress() + ident

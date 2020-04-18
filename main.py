@@ -5,6 +5,7 @@ import mel_parser
 def main():
     prog = '''
         int[] b = { a, b , {c, d } };
+        a = a.lenght;
         a.lenght();
         //a = a[b + c];
         return ;
