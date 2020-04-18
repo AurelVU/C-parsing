@@ -68,7 +68,7 @@ def _make_parser():
     simple_assign = (ident + ASSIGN.suppress() + (array_inited | array_new_init | expr | str_ )).setName('assign') #присвоение
     var_decl_inner = simple_assign | ident # инициализация и присвоение одного
     vars_decl = (array | ident) + var_decl_inner + pp.ZeroOrMore(COMMA + var_decl_inner) # инициализация и присвоение нескольких
-
+    var_decl = (array | ident) + ident
     assign = ident + ASSIGN.suppress() + expr
     simple_stmt = assign | call
 
@@ -98,11 +98,16 @@ def _make_parser():
 
 
     stmt_list << (pp.ZeroOrMore(stmt + pp.ZeroOrMore(SEMI)))
-    clazz = pp.Keyword("class").suppress() + ident
+
+    arg = (array | ident) + ident
+    func_dec = (array | ident) + ident + LPAR + pp.Optional(arg + pp.ZeroOrMore(COMMA.suppress() + arg)) + RPAR + LBRACE + pp.Optional(stmt_list) + RBRACE
+    clazz_dec = pp.Keyword("class").suppress() + ident + LBRACE + pp.ZeroOrMore(func_dec | (var_decl + SEMI)) + RBRACE
+
 
 
     #program = pp.Optional(pp.ZeroOrMore(clazz)).ignore(pp.cStyleComment).ignore(pp.dblSlashComment) + stmt_list.ignore(pp.cStyleComment).ignore(pp.dblSlashComment) + pp.StringEnd()
-    program = stmt_list.ignore(
+    main = pp.ZeroOrMore(clazz_dec | func_dec) + stmt_list
+    program = main.ignore(
         pp.cStyleComment).ignore(pp.dblSlashComment) + pp.StringEnd()
 
     start = program

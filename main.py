@@ -4,6 +4,21 @@ import mel_parser
 
 def main():
     prog = '''
+        class A
+        {
+            int a(int a)
+            {
+                int b = 0;
+            }
+            
+            int b;
+        }
+    
+        int a(int a)
+        {
+            int b = 0;
+        }
+    
         int[] b = { a, b , {c, d } };
         a = a.lenght;
         a.lenght();
