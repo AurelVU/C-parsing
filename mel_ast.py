@@ -256,6 +256,19 @@ class WhileNode(StmtNode):
         return 'while'
 
 
+class ReturnNode(StmtNode):
+    def __init__(self, exp: Optional[ExprNode] = None,
+                 row: Optional[int] = None, line: Optional[int] = None, **props):
+        super().__init__(row=row, line=line, **props)
+        self.exp = exp if exp else _empty
+
+    @property
+    def childs(self) -> Tuple[ExprNode, ...]:
+        return (self.exp, )
+
+    def __str__(self) -> str:
+        return 'return'
+
 class ForNode(StmtNode):
     def __init__(self, init: Union[StmtNode, None], cond: Union[ExprNode, None],
                  step: Union[StmtNode, None], body: Union[StmtNode, None],
