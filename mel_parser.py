@@ -13,7 +13,6 @@ def _make_parser():
     str_ = pp.QuotedString('"', escChar='\\', unquoteResults=False, convertWhitespaceEscapes=False) #описание строки
     literal = num | str_ #Символ это или число, или буква
     ident = ppc.identifier.setName('ident') #название функции, объявление непонятное
-    #integer = Word(nums)
 
     LPAR, RPAR = pp.Literal('(').suppress(), pp.Literal(')').suppress()
     LBRACK, RBRACK = pp.Literal("[").suppress(), pp.Literal("]").suppress()
@@ -38,15 +37,12 @@ def _make_parser():
 
     call = ident + LPAR + pp.Optional(expr + pp.ZeroOrMore(COMMA + expr)) + RPAR  # вызов фукнции
     dot = pp.Group(ident + pp.ZeroOrMore(DOT + (call | ident))).setName('bin_op')
-
-    val_arr = pp.Forward()
-    val_arr << pp.Group(ident + LBRACK + add + RBRACK).setName('val_arr')
-    array_index = LBRACK + expr + RBRACK # например [0]
-    array_elem = ident + pp.OneOrMore(array_index) #обращение к элементу массива
-
+    val_arr = pp.Forward() # a[5][b + a]
+    val_arr << ident + LBRACK + expr + RBRACK
     group = (
         literal |
-        array_elem |
+
+        val_arr |
         call |  # обязательно перед ident, т.к. приоритетный выбор (или использовать оператор ^ вместо | )
         dot |
         ident | #??????????
@@ -72,6 +68,7 @@ def _make_parser():
     simple_assign = (ident + ASSIGN.suppress() + (array_inited | array_new_init | expr | str_ )).setName('assign') #присвоение
     var_decl_inner = simple_assign | ident # инициализация и присвоение одного
     vars_decl = (array | ident) + var_decl_inner + pp.ZeroOrMore(COMMA + var_decl_inner) # инициализация и присвоение нескольких
+    var_decl = (array | ident) + ident
     assign = ident + ASSIGN.suppress() + expr
     simple_stmt = assign | call
 
