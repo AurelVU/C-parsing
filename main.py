@@ -18,6 +18,8 @@ def main():
         {
             int b = 0;
         }
+        
+        A a1 = new A();
 
         int[] b = { a, b , {c, d } };
         a = a.lenght;

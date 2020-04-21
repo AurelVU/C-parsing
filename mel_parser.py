@@ -60,12 +60,14 @@ def _make_parser():
 
     expr << (logical_or)
 
+    clazz_new_init = pp.Keyword("new").suppress() + ident + LPAR + RPAR
+
     array = pp.Forward()
     array_new_init = pp.Keyword("new").suppress() + ident + LBRACK + expr + RBRACK + pp.ZeroOrMore(LBRACK + expr + RBRACK)
     array << ident + LBRACK + RBRACK #пока только одномерные массивы. проблемы с рекурсией
     array_inited = pp.Forward()
     array_inited << LBRACE + pp.Optional((expr ^ array_inited) + pp.ZeroOrMore(COMMA + (expr ^ array_inited))) + RBRACE
-    simple_assign = (ident + ASSIGN.suppress() + (array_inited | array_new_init | expr | str_ )).setName('assign') #присвоение
+    simple_assign = (ident + ASSIGN.suppress() + (array_inited | (array_new_init ^ clazz_new_init) | expr | str_ )).setName('assign') #присвоение
     var_decl_inner = simple_assign | ident # инициализация и присвоение одного
     vars_decl = (array | ident) + var_decl_inner + pp.ZeroOrMore(COMMA + var_decl_inner) # инициализация и присвоение нескольких
     var_decl = (array | ident) + ident
@@ -102,6 +104,9 @@ def _make_parser():
     arg = (array | ident) + ident
     func_dec = (array | ident) + ident + LPAR + pp.Optional(arg + pp.ZeroOrMore(COMMA.suppress() + arg)) + RPAR + LBRACE + pp.Optional(stmt_list) + RBRACE
     clazz_dec = pp.Keyword("class").suppress() + ident + LBRACE + pp.ZeroOrMore(func_dec | (var_decl + SEMI)) + RBRACE
+
+    clazz_assign = pp.Forward()
+    clazz_assign << (ident + ASSIGN.suppress() + clazz_new_init).setName('assign')
 
 
 
