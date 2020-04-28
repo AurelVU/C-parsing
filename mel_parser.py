@@ -2,8 +2,9 @@ from contextlib import suppress
 
 import pyparsing as pp
 from pyparsing import pyparsing_common as ppc
-
-from mel_ast import *
+from AST_classes.bin_op_node import *
+from AST_classes.bin_op import *
+from AST_classes.stmt_list_node import *
 
 
 def _make_parser():

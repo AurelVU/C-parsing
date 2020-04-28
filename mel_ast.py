@@ -4,99 +4,23 @@ from enum import Enum
 import inspect
 
 
-class AstNode(ABC):
-    def __init__(self, row: Optional[int] = None, line: Optional[int] = None, **props):
-        super().__init__()
-        self.row = row
-        self.line = line
-        for k, v in props.items():
-            setattr(self, k, v)
-
-    @property
-    def childs(self) -> Tuple['AstNode', ...]:
-        return ()
-
-    @abstractmethod
-    def __str__(self) -> str:
-        pass
-
-    @property
-    def tree(self) -> [str, ...]:
-        res = [str(self)]
-        childs_temp = self.childs
-        for i, child in enumerate(childs_temp):
-            ch0, ch = '├', '│'
-            if i == len(childs_temp) - 1:
-                ch0, ch = '└', ' '
-            res.extend(((ch0 if j == 0 else ch) + ' ' + s for j, s in enumerate(child.tree)))
-        return res
-
-    def visit(self, func: Callable[['AstNode'], None]) -> None:
-        func(self)
-        map(func, self.childs)
-
-    def __getitem__(self, index):
-        return self.childs[index] if index < len(self.childs) else None
 
 
-class ExprNode(AstNode):
-    pass
 
 
-class LiteralNode(ExprNode):
-    def __init__(self, literal: str,
-                 row: Optional[int] = None, line: Optional[int] = None, **props):
-        super().__init__(row=row, line=line, **props)
-        literal = str(literal)
-        self.literal = literal
-        self.value = eval(literal)
-
-    def __str__(self) -> str:
-        return '{0} ({1})'.format(self.literal, type(self.value).__name__)
 
 
-class IdentNode(ExprNode):
-    def __init__(self, name: str,
-                 row: Optional[int] = None, line: Optional[int] = None, **props):
-        super().__init__(row=row, line=line, **props)
-        self.name = str(name)
-
-    def __str__(self) -> str:
-        return str(self.name)
 
 
-class BinOp(Enum):
-    ADD = '+'
-    SUB = '-'
-    MUL = '*'
-    DIV = '/'
-    GE = '>='
-    LE = '<='
-    NEQUALS = '<>'
-    EQUALS = '=='
-    GT = '>'
-    LT = '<'
-    BIT_AND = '&'
-    BIT_OR = '|'
-    LOGICAL_AND = '&&'
-    LOGICAL_OR = '||'
-    DOT = '.'
 
 
-class BinOpNode(ExprNode):
-    def __init__(self, op: BinOp, arg1: ExprNode, arg2: ExprNode,
-                 row: Optional[int] = None, line: Optional[int] = None, **props):
-        super().__init__(row=row, line=line, **props)
-        self.op = op
-        self.arg1 = arg1
-        self.arg2 = arg2
 
-    @property
-    def childs(self) -> Tuple[ExprNode, ExprNode]:
-        return self.arg1, self.arg2
 
-    def __str__(self) -> str:
-        return str(self.op.value)
+
+
+
+
+
 
 
 class StmtNode(ExprNode):
