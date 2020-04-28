@@ -2,15 +2,11 @@ from contextlib import suppress
 
 import pyparsing as pp
 from pyparsing import pyparsing_common as ppc
-from AST_classes.bin_op_node import *
-from AST_classes.bin_op import *
-from AST_classes.stmt_list_node import *
 
+from AST_classes import *
 
 def _make_parser():
-    # num = ppc.fnumber.setParseAction(lambda s, loc, tocs: tocs[0])
     num = ppc.fnumber # pp.Regex('[+-]?\\d+\\.?\\d*([eE][+-]?\\d+)?') # описание числа
-    # c escape-последовательностями как-то неправильно работает
     str_ = pp.QuotedString('"', escChar='\\', unquoteResults=False, convertWhitespaceEscapes=False) #описание строки
     literal = num | str_ #Символ это или число, или буква
     ident = ppc.identifier.setName('ident') #название функции, объявление непонятное
@@ -39,14 +35,14 @@ def _make_parser():
     call = ident + LPAR + pp.Optional(expr + pp.ZeroOrMore(COMMA + expr)) + RPAR  # вызов фукнции
     dot = pp.Group(ident + pp.ZeroOrMore(DOT + (call | ident))).setName('bin_op')
     val_arr = pp.Forward() # a[5][b + a]
-    val_arr << ident + LBRACK + expr + RBRACK
+    val_arr << ident + LBRACK + expr + RBRACK #обращение к элементу массива
     group = (
         literal |
 
         val_arr |
         call |  # обязательно перед ident, т.к. приоритетный выбор (или использовать оператор ^ вместо | )
         dot |
-        ident | #??????????
+        ident |
         LPAR + expr + RPAR
     )
 
@@ -61,11 +57,11 @@ def _make_parser():
 
     expr << (logical_or)
 
-    clazz_new_init = pp.Keyword("new").suppress() + ident + LPAR + RPAR
+    clazz_new_init = pp.Keyword("new").suppress() + ident + LPAR + RPAR #определение инициализации класса
 
     array = pp.Forward()
     array_new_init = pp.Keyword("new").suppress() + ident + LBRACK + expr + RBRACK + pp.ZeroOrMore(LBRACK + expr + RBRACK)
-    array << ident + LBRACK + RBRACK #пока только одномерные массивы. проблемы с рекурсией
+    array << ident + LBRACK + RBRACK #определения для одномерного массива
     array_inited = pp.Forward()
     array_inited << LBRACE + pp.Optional((expr ^ array_inited) + pp.ZeroOrMore(COMMA + (expr ^ array_inited))) + RBRACE
     simple_assign = (ident + ASSIGN.suppress() + (array_inited | (array_new_init ^ clazz_new_init) | expr | str_ )).setName('assign') #присвоение
@@ -99,7 +95,6 @@ def _make_parser():
          simple_stmt + SEMI)
     )
 
-
     stmt_list << (pp.ZeroOrMore(stmt + pp.ZeroOrMore(SEMI)))
 
     arg = (array | ident) + ident
@@ -109,9 +104,6 @@ def _make_parser():
     clazz_assign = pp.Forward()
     clazz_assign << (ident + ASSIGN.suppress() + clazz_new_init).setName('assign')
 
-
-
-    #program = pp.Optional(pp.ZeroOrMore(clazz)).ignore(pp.cStyleComment).ignore(pp.dblSlashComment) + stmt_list.ignore(pp.cStyleComment).ignore(pp.dblSlashComment) + pp.StringEnd()
     main = pp.ZeroOrMore(clazz_dec | func_dec) + stmt_list
     program = main.ignore(
         pp.cStyleComment).ignore(pp.dblSlashComment) + pp.StringEnd()

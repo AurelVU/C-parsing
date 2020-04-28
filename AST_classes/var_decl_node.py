@@ -9,7 +9,7 @@ class VarDeclNode(StmtNode):
         self.name = name
 
     @property
-    def childs(self) -> Tuple[ExprNode, ...]:
+    def childs(self):
         # return self.vars_type, (*self.vars_list)
         return (self.vars_type, self.name, )
 
